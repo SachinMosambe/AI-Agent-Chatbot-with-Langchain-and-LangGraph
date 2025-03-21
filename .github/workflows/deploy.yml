@@ -1,0 +1,36 @@
+name: Deploy to AWS EC2
+
+on:
+  push:
+    branches:
+      - master  # Trigger deploy when pushing to the 'master' branch
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Step 1: Checkout the repository
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Step 2: Set up SSH key to access EC2 instance
+      - name: Set up SSH key
+        uses: webfactory/ssh-agent@v0.5.3
+        with:
+          ssh-private-key: ${{ secrets.EC2_SSH_PRIVATE_KEY }}
+
+      # Step 3: Copy files to EC2 instance
+      - name: Copy files to EC2
+        run: |
+          scp -i /tmp/ssh_key -o StrictHostKeyChecking=no -r . ubuntu@ ec2-51-21-251-107.eu-north-1.compute.amazonaws.com:/home/ubuntu/ai-agent-chatbot
+
+      # Step 4: SSH into EC2 and deploy the application
+      - name: SSH into EC2 and deploy
+        run: |
+          ssh -i /tmp/ssh_key -o StrictHostKeyChecking=no ubuntu@ec2-51-21-251-107.eu-north-1.compute.amazonaws.com << 'EOF'
+            cd /home/ubuntu/ai-agent-chatbot
+            # Replace with the actual command to run your app
+            docker-compose down
+            docker-compose up --build -d
+          EOF
