@@ -1,0 +1,14 @@
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Print environment variables
+        run: env
+
+      - name: Debug secrets (safe method)
+        run: echo "Secret Loaded: ${SECRET_ENVIRONMENT_VARIABLE+true}"
+        env:
+          SECRET_ENVIRONMENT_VARIABLE: ${{ secrets.MY_SECRET }}
+
+      - name: Log GitHub context
+        run: echo '${{ toJson(github) }}'
