@@ -20,6 +20,11 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Check Environment Variables
+        run: |
+          echo ${{ secrets.GROQ_API_KEY }}
+          echo ${{ secrets.OPENAI_API_KEY }}
+          echo ${{ secrets.TAVILY_API_KEY }}
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
