@@ -1,4 +1,4 @@
-name: CI/CD - Build and Deploy AI Chatbot
+name: CI/CD - Build and Deploy FastAPI Chatbot
 
 on:
   push:
@@ -20,28 +20,26 @@ jobs:
 
       - name: Build and push Docker image to Google Container Registry (GCR)
         run: |
-          # Set the Google Cloud project
-          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
-          
           # Build the Docker image and tag it for GCR
           docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest .
-          
+
           # Push the Docker image to Google Container Registry
           docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest
 
       - name: Deploy to Google Cloud Run
         run: |
-          # Deploy the container to Google Cloud Run
+          # Deploy the container to Google Cloud Run and expose both FastAPI (8000) and Streamlit (8501)
           gcloud run deploy ai-chatbot \
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --port 8501  # Expose port 8501 for Streamlit
+            --port 8000  # Expose port 8000 for FastAPI
 
       - name: Output Google Cloud Run URL
         run: |
           # Get the URL of the deployed service
           SERVICE_URL=$(gcloud run services describe ai-chatbot --platform managed --region us-central1 --format 'value(status.url)')
           echo "Google Cloud Run service URL: $SERVICE_URL"
+
           
