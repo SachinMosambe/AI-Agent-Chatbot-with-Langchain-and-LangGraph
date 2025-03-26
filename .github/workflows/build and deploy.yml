@@ -28,17 +28,20 @@ jobs:
 
       - name: Deploy to Google Cloud Run
         run: |
-          # Deploy the container to Google Cloud Run and expose both FastAPI (8000) and Streamlit (8501)
+          # Deploy the container to Google Cloud Run
           gcloud run deploy ai-chatbot \
             --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
-            --port 8000  # Expose port 8000 for FastAPI
+            --port 8000
 
       - name: Output Google Cloud Run URL
         run: |
           # Get the URL of the deployed service
+          SERVICE_URL=$(gcloud run services describe ai-chatbot --platform managed --region us-central1 --format 'value(status.url)')
+          echo "Google Cloud Run service URL: $SERVICE_URL"
+
           SERVICE_URL=$(gcloud run services describe ai-chatbot --platform managed --region us-central1 --format 'value(status.url)')
           echo "Google Cloud Run service URL: $SERVICE_URL"
 
