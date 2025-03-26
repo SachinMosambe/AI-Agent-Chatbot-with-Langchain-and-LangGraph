@@ -18,11 +18,18 @@ jobs:
           project_id: ${{ secrets.GCP_PROJECT_ID }}
           credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Build and push Docker image to Google Container Registry (GCR)
+      - name: Build and tag Docker image
         run: |
           # Build the Docker image and tag it for GCR
           docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest .
 
+      - name: Authenticate Docker to GCR
+        run: |
+          # Authenticate Docker with Google Cloud
+          gcloud auth configure-docker
+
+      - name: Push Docker image to Google Container Registry (GCR)
+        run: |
           # Push the Docker image to Google Container Registry
           docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest
 
@@ -41,6 +48,3 @@ jobs:
           # Get the URL of the deployed service
           SERVICE_URL=$(gcloud run services describe ai-chatbot --platform managed --region us-central1 --format 'value(status.url)')
           echo "Google Cloud Run service URL: $SERVICE_URL"
-
-
-          
