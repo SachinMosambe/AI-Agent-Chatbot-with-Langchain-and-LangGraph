@@ -20,11 +20,12 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Check Environment Variables
+
+      - name: Log Environment Variables (for debugging)
         run: |
-          echo ${{ secrets.GROQ_API_KEY }}
-          echo ${{ secrets.OPENAI_API_KEY }}
-          echo ${{ secrets.TAVILY_API_KEY }}
+          echo "GROQ_API_KEY is set"
+          echo "OPENAI_API_KEY is set"
+          echo "TAVILY_API_KEY is set"
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
@@ -40,11 +41,20 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ai-chatbot:latest
-            docker stop ai-chatbot
-            docker rm ai-chatbot
-            docker run -d --name ai-chatbot -p 80:8501 -p 8000:8000 \
-            -e GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} \
-            -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-            -e TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
-            ${{ secrets.DOCKERHUB_USERNAME }}/ai-chatbot:latest
+            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ai-chatbot:latest
+            sudo docker stop ai-chatbot || true  # Ensure container stop doesn't fail
+            sudo docker rm ai-chatbot || true  # Ensure container removal doesn't fail
+            sudo docker run -d --name ai-chatbot -p 80:8501 -p 8000:8000 \
+              -e GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} \
+              -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
+              -e TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
+              ${{ secrets.DOCKERHUB_USERNAME }}/ai-chatbot:latest
+
+      - name: Check Docker Logs (for troubleshooting)
+        run: |
+          ssh -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "sudo docker logs ai-chatbot"
+          
+      - name: Wait for container to fully start
+        run: |
+          sleep 30  # Adjust as necessary
+          curl http://$EC2_HOST:8000/health  # Adjust URL to match your app's health endpoint
