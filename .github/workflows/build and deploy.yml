@@ -12,49 +12,36 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v2
-
-      - name: Log in to DockerHub
-        uses: docker/login-action@v2
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v2
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
+          project_id: ${{ secrets.GCP_PROJECT_ID }}
+          credentials_json: ${{ secrets.GCP_SA_KEY }}
 
-      - name: Log Environment Variables (for debugging)
+      - name: Build and push Docker image to Google Container Registry (GCR)
         run: |
-          echo "GROQ_API_KEY is set"
-          echo "OPENAI_API_KEY is set"
-          echo "TAVILY_API_KEY is set"
-
-      - name: Build and push Docker image
-        uses: docker/build-push-action@v5
-        with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/ai-chatbot:latest
-
-      - name: Deploy to EC2 via SSH
-        uses: appleboy/ssh-action@v1.0.0
-        with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
-          script: |
-            sudo docker pull ${{ secrets.DOCKERHUB_USERNAME }}/ai-chatbot:latest
-            sudo docker stop ai-chatbot || true  # Ensure container stop doesn't fail
-            sudo docker rm ai-chatbot || true  # Ensure container removal doesn't fail
-            sudo docker run -d --name ai-chatbot -p 80:8501 -p 8000:8000 \
-              -e GROQ_API_KEY=${{ secrets.GROQ_API_KEY }} \
-              -e OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }} \
-              -e TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }} \
-              ${{ secrets.DOCKERHUB_USERNAME }}/ai-chatbot:latest
-
-      - name: Check Docker Logs (for troubleshooting)
-        run: |
-          ssh -i ${{ secrets.EC2_SSH_KEY }} -o StrictHostKeyChecking=no ${EC2_USER}@${EC2_HOST} "sudo docker logs ai-chatbot"
+          # Set the Google Cloud project
+          gcloud config set project ${{ secrets.GCP_PROJECT_ID }}
           
-      - name: Wait for container to fully start
+          # Build the Docker image and tag it for GCR
+          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest .
+          
+          # Push the Docker image to Google Container Registry
+          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest
+
+      - name: Deploy to Google Cloud Run
         run: |
-          sleep 30  # Adjust as necessary
-          curl http://$EC2_HOST:8000/health  # Adjust URL to match your app's health endpoint
+          # Deploy the container to Google Cloud Run
+          gcloud run deploy ai-chatbot \
+            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest \
+            --platform managed \
+            --region us-central1 \
+            --allow-unauthenticated \
+            --port 8501  # Expose port 8501 for Streamlit
+
+      - name: Output Google Cloud Run URL
+        run: |
+          # Get the URL of the deployed service
+          SERVICE_URL=$(gcloud run services describe ai-chatbot --platform managed --region us-central1 --format 'value(status.url)')
+          echo "Google Cloud Run service URL: $SERVICE_URL"
+          
