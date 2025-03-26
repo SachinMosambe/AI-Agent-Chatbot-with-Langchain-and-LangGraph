@@ -20,24 +20,24 @@ jobs:
 
       - name: Build and tag Docker image
         run: |
-          # Build the Docker image and tag it for GCR
-          docker build -t gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest .
+          # Build the Docker image and tag it for Artifact Registry
+          docker build -t us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-agent/ai-chatbot:latest .
 
-      - name: Authenticate Docker to GCR
+      - name: Authenticate Docker to Artifact Registry
         run: |
-          # Authenticate Docker with Google Cloud
-          gcloud auth configure-docker
+          # Authenticate Docker with Artifact Registry
+          gcloud auth configure-docker us-central1-docker.pkg.dev
 
-      - name: Push Docker image to Google Container Registry (GCR)
+      - name: Push Docker image to Artifact Registry
         run: |
-          # Push the Docker image to Google Container Registry
-          docker push gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest
+          # Push the Docker image to Google Artifact Registry
+          docker push us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-agent/ai-chatbot:latest
 
       - name: Deploy to Google Cloud Run
         run: |
           # Deploy the container to Google Cloud Run
           gcloud run deploy ai-chatbot \
-            --image gcr.io/${{ secrets.GCP_PROJECT_ID }}/ai-chatbot:latest \
+            --image us-central1-docker.pkg.dev/${{ secrets.GCP_PROJECT_ID }}/ai-agent/ai-chatbot:latest \
             --platform managed \
             --region us-central1 \
             --allow-unauthenticated \
