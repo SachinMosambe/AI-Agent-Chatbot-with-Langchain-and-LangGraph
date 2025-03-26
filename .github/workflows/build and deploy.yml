@@ -42,7 +42,5 @@ jobs:
           SERVICE_URL=$(gcloud run services describe ai-chatbot --platform managed --region us-central1 --format 'value(status.url)')
           echo "Google Cloud Run service URL: $SERVICE_URL"
 
-          SERVICE_URL=$(gcloud run services describe ai-chatbot --platform managed --region us-central1 --format 'value(status.url)')
-          echo "Google Cloud Run service URL: $SERVICE_URL"
 
           
