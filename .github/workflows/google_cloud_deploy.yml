@@ -34,10 +34,10 @@ on:
      - master 
 
 env:
-  PROJECT_ID: 'ai-agent-454910'  # TODO: update to your Google Cloud project ID
+  PROJECT_ID: 'agent-455009'  # TODO: update to your Google Cloud project ID
   REGION: 'us-central1'  # TODO: update to your region
   SERVICE: 'my-service'  # TODO: update to your service name
-  REPOSITORY_NAME: 'gh-repo'  # Artifact Registry repository name
+  REPOSITORY_NAME: 'gh-action-1'  # Artifact Registry repository name
   GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}  # JSON key file stored in GitHub secrets
 
 jobs:
