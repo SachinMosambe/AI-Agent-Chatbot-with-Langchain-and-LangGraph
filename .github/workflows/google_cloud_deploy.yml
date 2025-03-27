@@ -1,5 +1,5 @@
 # This workflow builds and pushes a Docker container to Google Artifact Registry
-# and deploys it on Cloud Run when a commit is pushed to the "main" branch.
+# and deploys it on Cloud Run when a commit is pushed to the "master" branch.
 #
 # To configure this workflow:
 #
@@ -31,7 +31,7 @@ name: 'Build and Deploy to Cloud Run'
 on:
   push:
     branches:
-      - main  # No need for extra quotes around 'main'
+     - master 
 
 env:
   PROJECT_ID: 'ai-agent-454910'  # TODO: update to your Google Cloud project ID
