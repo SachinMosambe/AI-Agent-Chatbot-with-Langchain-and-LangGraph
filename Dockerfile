@@ -15,17 +15,16 @@ RUN apt-get update && apt-get install -y \
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose ports for FastAPI (8000) and Streamlit (8501)
-EXPOSE 8000 8501
+# Expose the required port for Cloud Run (8080)
+EXPOSE 8080
 
-# Create a script to run both FastAPI and Streamlit
+# Create a script to run both FastAPI (Gunicorn) and Streamlit
 RUN echo '#!/bin/bash\n\
-gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend:app --bind 0.0.0.0:8000 &\n\
+# Run FastAPI (Gunicorn with Uvicorn Worker) on port 8080\n\
+gunicorn -w 4 -k uvicorn.workers.UvicornWorker backend:app --bind 0.0.0.0:8080 &\n\
+# Run Streamlit on port 8501\n\
 streamlit run frontend.py --server.port 8501 --server.address 0.0.0.0\n' > /app/start.sh && chmod +x /app/start.sh
 
 # Command to run the script
 CMD ["bash", "/app/start.sh"]
 
-
-# Command to run the script
-CMD ["bash", "/app/start.sh"]
