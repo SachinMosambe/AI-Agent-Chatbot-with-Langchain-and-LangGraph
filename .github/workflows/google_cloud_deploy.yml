@@ -58,15 +58,11 @@ jobs:
         with:
           credentials_json: '${{ secrets.GOOGLE_CREDENTIALS_JSON }}'  # Use the JSON credentials secret
 
-      # BEGIN - Docker auth and build
-      #
-      # If you already have a container image, you can omit these steps.
-      - name: 'Docker Auth'
-        uses: 'docker/login-action@v2'  # Update to the latest stable version
-        with:
-          username: 'oauth2accesstoken'
-          password: '${{ steps.auth.outputs.auth_token }}'
-          registry: '${{ env.REGION }}-docker.pkg.dev'
+      # Step to configure Docker authentication using gcloud
+      - name: 'Authenticate Docker to Artifact Registry'
+        run: |
+          # Authenticate Docker with Artifact Registry
+          gcloud auth configure-docker us-central1-docker.pkg.dev  # Replace 'us-central1' with your region
 
       - name: 'Build and Push Container'
         run: |
