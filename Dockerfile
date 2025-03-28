@@ -16,7 +16,7 @@ RUN apt-get update && apt-get install -y \
 RUN pip install --no-cache-dir -r requirements.txt
 
 # Expose the required port for Cloud Run (8080)
-EXPOSE 8080
+EXPOSE 8080 8501
 
 # Create a script to run both FastAPI (Gunicorn) and Streamlit
 RUN echo '#!/bin/bash\n\
