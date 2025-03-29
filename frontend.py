@@ -39,7 +39,7 @@ selected_model = st.selectbox("Select Model:", MODEL_NAMES_GROQ if provider == "
 allow_web_search = st.checkbox("Allow Web Search")
 user_query = st.text_input("Enter your query:", placeholder="Ask Anything!")
 
-API_URL = "http://127.0.0.1:8000/chat"
+API_URL = "http://0.0.0.0:8080/chat"
 
 # Check if the user presses Enter (i.e., submits the query)
 if user_query.strip():
