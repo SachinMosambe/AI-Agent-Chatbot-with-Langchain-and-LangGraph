@@ -38,7 +38,12 @@ env:
   REGION: 'us-central1'  # TODO: update to your region
   SERVICE: 'my-service'  # TODO: update to your service name
   REPOSITORY_NAME: 'gh-action-1'  # Artifact Registry repository name
-  GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}  # JSON key file stored in GitHub secrets
+  GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
+  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
+  TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
+  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+
+  # JSON key file stored in GitHub secrets
 
 jobs:
   deploy:
