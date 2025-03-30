@@ -35,16 +35,18 @@ jobs:
 
       - name: 'Build and Push Docker image'
         run: |
-          IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          IMAGE_URI="gcr.io/${{env.PROJECT_ID}}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
           echo "Building image: $IMAGE_URI"
-          docker build -t "$IMAGE_URI" .
+          docker build -t "$IMAGE_NAME" .
+          docker tag "$IMAGE_NAME" "$IMAGE_URI"
+          echo "Pushing image: $IMAGE_URI"
           docker push "$IMAGE_URI"
 
       - name: 'Deploy to Cloud Run'
         id: deploy
         run: |
-          IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
-          gcloud run deploy ${{ env.SERVICE }} \
+          IMAGE_URI="gcr.io/{{ env.PROJECT_ID }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          gcloud run deploy ${{IMAGE_NAME}} \
             --image "$IMAGE_URI" \
             --region ${{ env.REGION }} \
             --platform managed \
