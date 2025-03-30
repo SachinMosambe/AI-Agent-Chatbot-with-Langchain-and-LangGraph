@@ -9,7 +9,7 @@ env:
   PROJECT_ID: 'agent-455009'  # 🔁 Replace with your GCP Project ID
   REGION: 'us-central1'
   SERVICE: 'ai-chat-service'  # 🔁 Your desired Cloud Run service name
-  REPOSITORY_NAME: 'gh-acion-1'  # 🔁 Artifact Registry name
+  REPOSITORY_NAME: 'ai-agent'  # 🔁 Artifact Registry name
   IMAGE_NAME: 'ai-chat-image'
 
 jobs:
