@@ -3,7 +3,7 @@ from fastapi import FastAPI
 from pydantic import BaseModel
 from typing import List
 from ai_agent import get_response_from_ai_agent
-
+from constants import HOST , BACKEND_PORT
 # Define request structure
 class RequestState(BaseModel):
     model_name: str
@@ -46,5 +46,5 @@ def chat_endpoint(request: RequestState):
 # Step 3: Run app & Explore Swagger UI Docs
 if __name__ == "__main__":
     import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=8080)
+    uvicorn.run(app, host=HOST, port=BACKEND_PORT)
 

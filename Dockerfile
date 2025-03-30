@@ -4,8 +4,8 @@ FROM python:3.11-slim
 # Set the working directory in the container
 WORKDIR /app
 
-# Copy the current directory contents into the container
-COPY . /app
+# Copy only the requirements file to optimize caching
+COPY requirements.txt /app/
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
@@ -15,9 +15,15 @@ RUN apt-get update && apt-get install -y \
 # Install Python dependencies
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Expose ports for FastAPI (8000) and Streamlit (8501)
+# Copy the rest of the application code
+COPY . /app
+
+# Expose ports for FastAPI (8080) and Streamlit (8501)
 EXPOSE 8080 8501
 
+# Create a non-root user and adjust ownership
+RUN adduser --disabled-password --gecos "" appuser && chown -R appuser /app
+USER appuser
 
 # Create a script to run both FastAPI and Streamlit
 RUN echo '#!/bin/bash\n\
@@ -26,4 +32,3 @@ streamlit run frontend.py --server.port 8501 --server.address 0.0.0.0\n' > /app/
 
 # Command to run the script
 CMD ["bash", "/app/start.sh"]
-

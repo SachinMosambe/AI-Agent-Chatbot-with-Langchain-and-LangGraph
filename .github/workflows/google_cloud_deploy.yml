@@ -1,88 +1,58 @@
-# This workflow builds and pushes a Docker container to Google Artifact Registry
-# and deploys it on Cloud Run when a commit is pushed to the "master" branch.
-#
-# To configure this workflow:
-#
-# 1. Enable the following Google Cloud APIs:
-#
-#    - Artifact Registry (artifactregistry.googleapis.com)
-#    - Cloud Run (run.googleapis.com)
-#    - IAM Credentials API (iamcredentials.googleapis.com)
-#
-#    You can learn more about enabling APIs at
-#    https://support.google.com/googleapi/answer/6158841.
-#
-# 2. Create and configure a Workload Identity Provider for GitHub:
-#    https://github.com/google-github-actions/auth#preferred-direct-workload-identity-federation.
-#
-#    Depending on how you authenticate, you will need to grant an IAM principal
-#    permissions on Google Cloud:
-#
-#    - Artifact Registry Administrator (roles/artifactregistry.admin)
-#    - Cloud Run Developer (roles/run.developer)
-#
-#    You can learn more about setting IAM permissions at
-#    https://cloud.google.com/iam/docs/manage-access-other-resources
-#
-# 3. Change the values in the "env" block to match your values.
-
 name: 'Build and Deploy to Cloud Run'
 
 on:
   push:
     branches:
-     - master 
+      - master
 
 env:
-  PROJECT_ID: 'agent-455009'  # TODO: update to your Google Cloud project ID
-  REGION: 'us-central1'  # TODO: update to your region
-  SERVICE: 'my-service'  # TODO: update to your service name
-  REPOSITORY_NAME: 'gh-action-1'  # Artifact Registry repository name
-  GOOGLE_CREDENTIALS_JSON: ${{ secrets.GOOGLE_CREDENTIALS_JSON }}
-  GROQ_API_KEY: ${{ secrets.GROQ_API_KEY }}
-  TAVILY_API_KEY: ${{ secrets.TAVILY_API_KEY }}
-  OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
-
-  # JSON key file stored in GitHub secrets
+  PROJECT_ID: 'agent-455009'  # 🔁 Replace with your GCP Project ID
+  REGION: 'us-central1'
+  SERVICE: 'ai-chat-service'  # 🔁 Your desired Cloud Run service name
+  REPOSITORY_NAME: 'ai-chat-registry'  # 🔁 Artifact Registry name
+  IMAGE_NAME: 'ai-chat'
 
 jobs:
   deploy:
-    runs-on: 'ubuntu-latest'
+    runs-on: ubuntu-latest
 
     permissions:
       contents: 'read'
       id-token: 'write'
 
     steps:
-      - name: 'Checkout'
-        uses: 'actions/checkout@v2'  # Updated version of actions/checkout
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
 
-      # Authenticate to Google Cloud using the JSON credentials file
       - name: 'Authenticate to Google Cloud'
-        uses: 'google-github-actions/auth@v2'
+        uses: google-github-actions/auth@v2
         with:
-          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS_JSON }}'  # Use the JSON credentials secret
+          credentials_json: '${{ secrets.GOOGLE_CREDENTIALS_JSON }}'
 
-      # Step to configure Docker authentication using gcloud
-      - name: 'Authenticate Docker to Artifact Registry'
+      - name: 'Configure Docker for Artifact Registry'
         run: |
-          # Authenticate Docker with Artifact Registry
-          gcloud auth configure-docker us-central1-docker.pkg.dev  # Replace 'us-central1' with your region
+          gcloud auth configure-docker ${{ env.REGION }}-docker.pkg.dev
 
-      - name: 'Build and Push Container'
+      - name: 'Build and Push Docker image'
         run: |
-          DOCKER_TAG="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.SERVICE }}:${{ github.sha }}"
-          docker build --tag "${DOCKER_TAG}" .
-          docker push "${DOCKER_TAG}"
-      
+          IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          echo "Building image: $IMAGE_URI"
+          docker build -t "$IMAGE_URI" .
+          docker push "$IMAGE_URI"
+
       - name: 'Deploy to Cloud Run'
-        uses: 'google-github-actions/deploy-cloudrun@v2'
-        with:
-          service: '${{ env.SERVICE }}'
-          region: '${{ env.REGION }}'
-          image: '${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.SERVICE }}:${{ github.sha }}'
-
-      # If required, use the Cloud Run URL output in later steps
-      - name: 'Show Cloud Run URL'
+        id: deploy
         run: |
-          echo "Deployed to Cloud Run at: ${{ steps.deploy.outputs.url }}"
+          IMAGE_URI="${{ env.REGION }}-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY_NAME }}/${{ env.IMAGE_NAME }}:${{ github.sha }}"
+          gcloud run deploy ${{ env.SERVICE }} \
+            --image "$IMAGE_URI" \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --allow-unauthenticated \
+            --port 8501 \
+            --set-env-vars "GROQ_API_KEY=${{ secrets.GROQ_API_KEY }},TAVILY_API_KEY=${{ secrets.TAVILY_API_KEY }},OPENAI_API_KEY=${{ secrets.OPENAI_API_KEY }},HOST=0.0.0.0,BACKEND_PORT=8080,FRONTEND_PORT=8501"
+
+      - name: 'Show Deployed URL'
+        run: |
+          URL=$(gcloud run services describe ${{ env.SERVICE }} --region ${{ env.REGION }} --format='value(status.url)')
+          echo "✅ App deployed at: $URL"

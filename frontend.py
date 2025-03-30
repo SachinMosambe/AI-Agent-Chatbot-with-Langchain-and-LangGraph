@@ -6,6 +6,7 @@ load_dotenv()
 import streamlit as st
 import requests
 import json
+from constants import HOST, BACKEND_PORT
 
 # Set up page configuration
 st.set_page_config(page_title="LangGraph Agent UI", layout="centered")
@@ -39,7 +40,7 @@ selected_model = st.selectbox("Select Model:", MODEL_NAMES_GROQ if provider == "
 allow_web_search = st.checkbox("Allow Web Search")
 user_query = st.text_input("Enter your query:", placeholder="Ask Anything!")
 
-API_URL = "http://0.0.0.0:8080/chat"
+API_URL = f'http://127.0.0.1:{BACKEND_PORT}/chat'
 
 # Check if the user presses Enter (i.e., submits the query)
 if user_query.strip():
@@ -50,6 +51,7 @@ if user_query.strip():
         "messages": [user_query],
         "allow_search": allow_web_search
     }
+    print(API_URL, payload)  # Debugging line
 
     response = requests.post(API_URL, json=payload)
 
