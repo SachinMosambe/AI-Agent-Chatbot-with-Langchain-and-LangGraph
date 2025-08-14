@@ -1,17 +1,17 @@
-# Load environment variables
+
 from dotenv import load_dotenv
 load_dotenv()
 
-# Step 1: Setup UI with Streamlit
+
 import streamlit as st
 import requests
 import json
 from constants import HOST, BACKEND_PORT
 
-# Set up page configuration
+
 st.set_page_config(page_title="LangGraph Agent UI", layout="centered")
 
-# Sidebar with information
+
 with st.sidebar:
     st.write("### Welcome to AI Chatbot Agent!")
     st.write("Create and interact with AI Agents.")
@@ -22,14 +22,14 @@ with st.sidebar:
         for message in st.session_state.history:
             st.markdown(f"**{message['role'].capitalize()}**: {message['content']}")
 
-# Main UI
+
 st.title("AI Chatbot Agents")
 st.write("Define and interact with AI agents!")
 
 if "history" not in st.session_state:
     st.session_state.history = []
 
-# User input fields
+
 system_prompt = st.text_area("Define your AI Agent:", height=70, placeholder="Type your system prompt here...")
 provider = st.radio("Select Provider:", ("Groq", "OpenAI"))
 
@@ -42,7 +42,7 @@ user_query = st.text_input("Enter your query:", placeholder="Ask Anything!")
 
 API_URL = f'http://127.0.0.1:{BACKEND_PORT}/chat'
 
-# Check if the user presses Enter (i.e., submits the query)
+
 if user_query.strip():
     payload = {
         "model_name": selected_model,
@@ -51,12 +51,12 @@ if user_query.strip():
         "messages": [user_query],
         "allow_search": allow_web_search
     }
-    print(API_URL, payload)  # Debugging line
+    print(API_URL, payload)  
 
     response = requests.post(API_URL, json=payload)
 
     try:
-        response_data = response.json()  # Ensure JSON parsing
+        response_data = response.json()
     except json.JSONDecodeError:
         st.error("Error: API did not return valid JSON.")
         st.write("DEBUG: Raw Response:", response.text)
