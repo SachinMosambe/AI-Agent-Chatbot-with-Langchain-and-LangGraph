@@ -1,6 +1,4 @@
-Here’s an improved version of your README.md with better structure, clarity, and some additional details. I've rephrased certain parts for a clearer flow and added some helpful information.
 
----
 
 # Project Setup Guide
 
